@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: root123
+  application:
+    name: book-shop
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+my_token:
+  key: my-very-secret-key-with-32-characters-minimum
+  expire_time: 3600000
