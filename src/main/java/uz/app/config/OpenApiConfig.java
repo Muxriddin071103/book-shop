@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
                 title = "Book shop project",
                 version = "${api.version}",
                 contact = @Contact(
-                        name = "Adashov Muxriddin", email = "developmuxriddin@gmail.com", url = "https://github.com/jlkesh"
+                        name = "Adashov Muxriddin", email = "developmuxriddin@gmail.com", url = "https://github.com/Muxriddin071103/book-shop.git"
                 ),
                 license = @License(
                         name = "Apache 2.0",

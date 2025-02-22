@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,36 +33,41 @@ public class MyFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-
             String authorization = request.getHeader("Authorization");
-            if (authorization == null || authorization.equals("annonumous")) {
+            if (authorization == null || !authorization.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
                 return;
             }
-            if (authorization.startsWith("Bearer ")) {
-                authorization = authorization.substring(7);
-                String username = jwtProvider.getSubject(authorization);
+
+            String token = authorization.substring(7);
+            String username = jwtProvider.getSubject(token);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 setAuthenticationToContext(username);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid or expired token");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    public void setAuthenticationToContext(String  username){
+    public void setAuthenticationToContext(String username) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        UsernamePasswordAuthenticationToken authUser =new UsernamePasswordAuthenticationToken(
+        if (userDetails == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        UsernamePasswordAuthenticationToken authUser = new UsernamePasswordAuthenticationToken(
                 userDetails,
-                userDetails.isCredentialsNonExpired() &&
-                        userDetails.isAccountNonExpired() &&
-                        userDetails.isAccountNonLocked() &&
-                        userDetails.isEnabled(),
+                null,
                 userDetails.getAuthorities()
         );
-        SecurityContextHolder
-                .getContext()
-                .setAuthentication(authUser);
+
+        SecurityContextHolder.getContext().setAuthentication(authUser);
     }
+
 }

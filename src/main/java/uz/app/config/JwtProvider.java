@@ -1,5 +1,6 @@
 package uz.app.config;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -30,25 +31,25 @@ public class JwtProvider {
                 .compact();
     }
 
-    public Key signKey() {
+    private Key signKey() {
+        if (key.length() < 32) {
+            throw new IllegalArgumentException("JWT secret key must be at least 32 characters long");
+        }
         return Keys.hmacShaKeyFor(key.getBytes());
     }
 
-    public String getSubject(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Invalid or missing Authorization header");
-        }
-
+    public String getSubject(String token) {
         try {
-            String token = authHeader.substring(7);
             return Jwts.parserBuilder()
                     .setSigningKey(signKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
-        } catch (Exception e) {
-            throw new RuntimeException("JWT parsing failed: " + e.getMessage());
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("Token expired, please login again.");
+        } catch (JwtException e) {
+            throw new RuntimeException("Invalid JWT token: " + e.getMessage());
         }
     }
 }

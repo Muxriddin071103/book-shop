@@ -10,5 +10,5 @@ spring:
     hibernate:
       ddl-auto: update
 my_token:
-  key: my-very-secret-key-with-32-characters-minimum
+  key: MySuperSecretKeyThatIsAtLeast32CharactersLong
   expire_time: 3600000
