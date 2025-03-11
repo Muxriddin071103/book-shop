@@ -1,3 +1,4 @@
+/*
 package uz.app.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,9 @@ public class DashboardController {
         Optional<User> currentUser = userUtil.getCurrentUser();
 
         return currentUser.map(user -> ResponseEntity.ok(
-                        new UserDTO(user.getFirstName(), user.getLastName(), user.getBirthYear(), user.getPhoneNumber())
+                        new UserDTO(user.getFirstName(), user.getLastName(), user.getBirthYear(), user.getPhoneNumber(), user.getRole())
                 ))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
+*/
