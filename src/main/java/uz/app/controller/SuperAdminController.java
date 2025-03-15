@@ -1,5 +1,6 @@
 package uz.app.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +16,33 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/super-admin")
 @RequiredArgsConstructor
+@Tag(name = "Super Admin Controller",description = "Only Super Admin can manage")
 public class SuperAdminController {
     private final UserRepository userRepository;
 
+    @GetMapping("/users")
+    public ResponseEntity<?> getUsers() {
+        List<UserDTO> admins = userRepository
+                .findAll()
+                .stream()
+                .filter(user -> user.getRole() == Role.USER)
+                .map(user -> new UserDTO(
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getBirthYear(),
+                        user.getPhoneNumber(),
+                        user.getRole()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(admins);
+    }
+
     @GetMapping("/admins")
     public ResponseEntity<List<UserDTO>> getAdmins() {
-        List<UserDTO> admins = userRepository.findAll().stream()
+        List<UserDTO> admins = userRepository
+                .findAll()
+                .stream()
                 .filter(user -> user.getRole() == Role.ADMIN)
                 .map(user -> new UserDTO(
                         user.getFirstName(),
@@ -36,7 +58,9 @@ public class SuperAdminController {
 
     @GetMapping("/operators")
     public ResponseEntity<List<UserDTO>> getOperators() {
-        List<UserDTO> operators = userRepository.findAll().stream()
+        List<UserDTO> operators = userRepository
+                .findAll()
+                .stream()
                 .filter(user -> user.getRole() == Role.OPERATOR)
                 .map(user -> new UserDTO(
                         user.getFirstName(),
@@ -59,6 +83,10 @@ public class SuperAdminController {
         }
 
         User user = userOptional.get();
+
+        if (user.getRole() == Role.USER || user.getRole() == Role.ADMIN || user.getRole() == Role.OPERATOR) {
+            return ResponseEntity.badRequest().body("I cannot show it, because it is not a super admin");
+        }
 
         UserDTO userDTO = new UserDTO(
                 user.getFirstName(),

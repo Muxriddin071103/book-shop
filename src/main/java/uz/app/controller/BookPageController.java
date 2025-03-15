@@ -29,12 +29,16 @@ public class BookPageController {
 
     @PostMapping
     public ResponseEntity<?> addPage(@RequestBody BookPageDTO pageDTO) {
+        System.out.println("Book ID: " + pageDTO.getBookId());
+
         Product book = productRepository.findById(pageDTO.getBookId())
                 .orElse(null);
 
         if (book == null) {
             return ResponseEntity.badRequest().body("Book not found");
         }
+
+        System.out.println("Book found: " + book.getName());
 
         BookPage page = new BookPage();
         page.setBook(book);

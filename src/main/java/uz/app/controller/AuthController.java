@@ -1,5 +1,6 @@
 package uz.app.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authorization Controller",description = "This is for entering to system")
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -67,6 +69,7 @@ public class AuthController {
 
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
+    @Tag(name = "User's Profile")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.badRequest().body("User not authenticated");
