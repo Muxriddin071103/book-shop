@@ -26,6 +26,7 @@ public class DataGenerator {
                         .firstName("Super")
                         .lastName("Admin")
                         .phoneNumber("111")
+                        .birthYear(2000)
                         .password(passwordEncoder.encode("super111"))
                         .role(Role.SUPER_ADMIN)
                         .createdAt(LocalDateTime.now())
