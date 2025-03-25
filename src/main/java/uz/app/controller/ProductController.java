@@ -6,12 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.app.dto.ProductDTO;
-import uz.app.entity.Product;
-import uz.app.entity.ProductCategory;
-import uz.app.entity.ProductType;
-import uz.app.repository.ProductCategoryRepository;
-import uz.app.repository.ProductRepository;
-import uz.app.repository.ProductTypeRepository;
+import uz.app.entity.*;
+import uz.app.repository.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,22 +15,34 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-@Tag(name = "Product Management", description = "Only Admin & Super Admin can manage")
+@Tag(name = "Product Management")
 public class ProductController {
     private final ProductRepository productRepository;
     private final ProductTypeRepository productTypeRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final AuthorRepository authorRepository;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(productRepository.findAll());
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Product> getFromId(@PathVariable Long id) {
+        return productRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> addProduct(@RequestBody ProductDTO productDTO) {
         Optional<ProductType> productType = productTypeRepository.findById(productDTO.getProductTypeId());
         Optional<ProductCategory> productCategory = productCategoryRepository.findById(productDTO.getProductCategoryId());
+        Optional<Author> author = productDTO.getAuthorId() != null ?
+                authorRepository.findById(productDTO.getAuthorId()) : Optional.empty();
 
         if (productType.isEmpty() || productCategory.isEmpty()) {
             return ResponseEntity.badRequest().body("Invalid ProductType or ProductCategory ID");
@@ -49,22 +57,19 @@ public class ProductController {
         product.setQuantity(productDTO.getQuantity());
         product.setDescription(productDTO.getDescription());
         product.setAbout(productDTO.getAbout());
+        author.ifPresent(product::setAuthor);
 
         return ResponseEntity.ok(productRepository.save(product));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Product> getFromId(@PathVariable Long id) {
-        return productRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
         Optional<Product> existingProduct = productRepository.findById(id);
         Optional<ProductType> productType = productTypeRepository.findById(productDTO.getProductTypeId());
         Optional<ProductCategory> productCategory = productCategoryRepository.findById(productDTO.getProductCategoryId());
+        Optional<Author> author = productDTO.getAuthorId() != null ?
+                authorRepository.findById(productDTO.getAuthorId()) : Optional.empty();
 
         if (existingProduct.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -82,11 +87,13 @@ public class ProductController {
         updatedProduct.setQuantity(productDTO.getQuantity());
         updatedProduct.setDescription(productDTO.getDescription());
         updatedProduct.setAbout(productDTO.getAbout());
+        author.ifPresent(updatedProduct::setAuthor);
 
         return ResponseEntity.ok(productRepository.save(updatedProduct));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         if (productRepository.existsById(id)) {
             productRepository.deleteById(id);
