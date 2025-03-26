@@ -29,6 +29,9 @@ public class Product {
     @JoinColumn(name = "author_id")
     private Author author;
 
+    @OneToOne(cascade = CascadeType.REMOVE)
+    private Attachment photo;
+
     private Double price;
     private Double salePrice;
     private Integer quantity;
