@@ -1,10 +1,5 @@
 package uz.app.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -138,13 +133,11 @@ public class ProductController {
         updatedProduct.setAbout(productDTO.getAbout());
         author.ifPresent(updatedProduct::setAuthor);
 
-        // Handle photo update
         if (photo != null && !photo.isEmpty()) {
-            // Delete old photo if exists
             if (updatedProduct.getPhoto() != null) {
                 attachmentRepository.delete(updatedProduct.getPhoto());
             }
-            // Create and set new photo
+
             Attachment attachment = Attachment.createAttachment(photo, "/products");
             updatedProduct.setPhoto(attachment);
         }
@@ -161,7 +154,6 @@ public class ProductController {
         }
 
         Product product = productOptional.get();
-        // Delete the photo if exists (cascade should handle this automatically)
         productRepository.delete(product);
         return ResponseEntity.ok().build();
     }

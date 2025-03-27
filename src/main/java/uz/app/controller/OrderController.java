@@ -116,8 +116,8 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    @Tag(name = "Change order's status", description = "It is for super admin & admin")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN','OPERATOR')")
+    @Tag(name = "Change order's status")
     public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         Optional<Order> existingOrderOptional = orderRepository.findById(id);
         if (existingOrderOptional.isEmpty()) {
