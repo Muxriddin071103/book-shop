@@ -74,6 +74,56 @@ public class SuperAdminController {
         return ResponseEntity.ok(operators);
     }
 
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<?> getAdminById(@PathVariable Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Admin not found");
+        }
+
+        User user = userOptional.get();
+
+        if (user.getRole() != Role.ADMIN) {
+            return ResponseEntity.badRequest().body("User is not an admin");
+        }
+
+        UserDTO userDTO = new UserDTO(
+                user.getFirstName(),
+                user.getLastName(),
+                user.getBirthYear(),
+                user.getPhoneNumber(),
+                user.getRole()
+        );
+
+        return ResponseEntity.ok(userDTO);
+    }
+
+    @GetMapping("/operator/{id}")
+    public ResponseEntity<?> getOperatorById(@PathVariable Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Operator not found");
+        }
+
+        User user = userOptional.get();
+
+        if (user.getRole() != Role.OPERATOR) {
+            return ResponseEntity.badRequest().body("User is not an operator");
+        }
+
+        UserDTO userDTO = new UserDTO(
+                user.getFirstName(),
+                user.getLastName(),
+                user.getBirthYear(),
+                user.getPhoneNumber(),
+                user.getRole()
+        );
+
+        return ResponseEntity.ok(userDTO);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id) {
         Optional<User> userOptional = userRepository.findById(id);
@@ -176,6 +226,41 @@ public class SuperAdminController {
         return ResponseEntity.ok(updatedUserDTO);
     }
 
+    @DeleteMapping("/delete-admin/{id}")
+    public ResponseEntity<?> deleteAdmin(@PathVariable Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Admin not found");
+        }
+
+        User user = userOptional.get();
+
+        if (user.getRole() != Role.ADMIN) {
+            return ResponseEntity.badRequest().body("User is not an admin");
+        }
+
+        userRepository.deleteById(id);
+        return ResponseEntity.ok().body("Admin deleted successfully");
+    }
+
+    @DeleteMapping("/delete-operator/{id}")
+    public ResponseEntity<?> deleteOperator(@PathVariable Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Operator not found");
+        }
+
+        User user = userOptional.get();
+
+        if (user.getRole() != Role.OPERATOR) {
+            return ResponseEntity.badRequest().body("User is not an operator");
+        }
+
+        userRepository.deleteById(id);
+        return ResponseEntity.ok().body("Operator deleted successfully");
+    }
 
     @DeleteMapping("/delete-user/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {

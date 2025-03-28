@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,23 +33,6 @@ public class FileController {
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    private File findFile(File directory, String partialName) {
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    File found = findFile(file, partialName);
-                    if (found != null) {
-                        return found;
-                    }
-                } else if (file.getName().toLowerCase().contains(partialName.toLowerCase())) {
-                    return file;
-                }
-            }
-        }
-        return null;
     }
 
     @GetMapping
