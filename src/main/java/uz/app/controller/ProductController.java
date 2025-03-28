@@ -21,6 +21,7 @@ import java.util.Optional;
 @RequestMapping("/products")
 @RequiredArgsConstructor
 @Tag(name = "Product Management")
+@CrossOrigin(origins = "*")
 public class ProductController {
     private final ProductRepository productRepository;
     private final ProductTypeRepository productTypeRepository;
@@ -30,13 +31,13 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<?> getAllProducts() {
         return ResponseEntity.ok(productRepository.findAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Product> getFromId(@PathVariable Long id) {
+    public ResponseEntity<?> getFromId(@PathVariable Long id) {
         return productRepository
                 .findById(id)
                 .map(ResponseEntity::ok)
@@ -45,7 +46,7 @@ public class ProductController {
 
     @GetMapping("/by-type")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Map<String, List<Product>>> getProductsByType() {
+    public ResponseEntity<?> getProductsByType() {
         List<ProductType> productTypes = productTypeRepository.findAll();
         Map<String, List<Product>> result = new HashMap<>();
 

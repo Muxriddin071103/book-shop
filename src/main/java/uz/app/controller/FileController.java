@@ -2,38 +2,38 @@ package uz.app.controller;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @RestController
 @RequestMapping("/files")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 public class FileController {
 
-    @GetMapping("/{partialName}")
-    public ResponseEntity<Map<String, Object>> serveFile(@PathVariable String partialName) throws MalformedURLException {
-        File baseDir = new File("src/main/files/photos/");
+    @GetMapping("/photos/{filename:.+}")
+    public ResponseEntity<Resource> servePhoto(@PathVariable String filename) {
+        try {
+            Path file = Paths.get("src/main/files/photos/" + filename);
+            Resource resource = new UrlResource(file.toUri());
 
-        if (!baseDir.exists() || !baseDir.isDirectory()) {
+            if (resource.exists() || resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_TYPE, Files.probeContentType(file))
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
-
-        File foundFile = findFile(baseDir, partialName);
-
-        if (foundFile != null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("filename", foundFile.getName());
-            response.put("size", foundFile.length());
-            response.put("url", "/files/photos/" + foundFile.getName());
-
-            return ResponseEntity.ok(response);
-        }
-
-        return ResponseEntity.notFound().build();
     }
 
     private File findFile(File directory, String partialName) {
