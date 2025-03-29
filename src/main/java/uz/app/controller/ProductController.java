@@ -44,14 +44,15 @@ public class ProductController {
     public ResponseEntity<?> getProductsByType() {
         List<Map<String, Object>> result = productTypeRepository.findAll().stream()
                 .map(type -> {
-                    Map<String, Object> typeMap = new HashMap<>();
+                    Map<String, Object> typeMap = new LinkedHashMap<>();
                     typeMap.put("typeName", type.getName());
 
                     List<Map<String, Object>> products = productRepository
                             .findTop5ByProductTypeOrderByIdDesc(type)
                             .stream()
                             .map(product -> {
-                                Map<String, Object> productMap = new HashMap<>();
+                                Map<String, Object> productMap = new LinkedHashMap<>();
+                                productMap.put("id",product.getId());
                                 productMap.put("name", product.getName());
                                 productMap.put("productTypeId", product.getProductType().getId());
                                 productMap.put("productCategoryId", product.getProductCategory().getId());
@@ -88,6 +89,7 @@ public class ProductController {
                     .stream()
                     .map(product -> {
                         Map<String, Object> productMap = new HashMap<>();
+                        productMap.put("id",product.getId());
                         productMap.put("name", product.getName());
                         productMap.put("productTypeId", product.getProductType().getId());
                         productMap.put("productCategoryId", product.getProductCategory().getId());
@@ -124,6 +126,7 @@ public class ProductController {
                 .stream()
                 .map(product -> {
                     Map<String, Object> productMap = new HashMap<>();
+                    productMap.put("id",product.getId());
                     productMap.put("name", product.getName());
                     productMap.put("productTypeId", product.getProductType().getId());
                     productMap.put("productCategoryId", product.getProductCategory().getId());
