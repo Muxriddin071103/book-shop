@@ -2,12 +2,14 @@ package uz.app.dto;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class ProductDTO {
     private String name;
-    private Long productTypeId;
-    private Long productCategoryId;
-    private Long authorId;
+    private UUID productTypeId;
+    private UUID productCategoryId;
+    private UUID authorId;
     private Double price;
     private Double salePrice;
     private Integer quantity;

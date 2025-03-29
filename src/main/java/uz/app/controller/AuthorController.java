@@ -10,6 +10,7 @@ import uz.app.repository.AuthorRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/authors")
@@ -25,7 +26,7 @@ public class AuthorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Author> getAuthorById(@PathVariable Long id) {
+    public ResponseEntity<Author> getAuthorById(@PathVariable UUID id) {
         return authorRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -40,7 +41,7 @@ public class AuthorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Author> updateAuthor(@PathVariable Long id, @RequestBody Author authorDetails) {
+    public ResponseEntity<Author> updateAuthor(@PathVariable UUID id, @RequestBody Author authorDetails) {
         Optional<Author> existingAuthor = authorRepository.findById(id);
         if (existingAuthor.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -58,7 +59,7 @@ public class AuthorController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAuthor(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAuthor(@PathVariable UUID id) {
         if (authorRepository.existsById(id)) {
             authorRepository.deleteById(id);
             return ResponseEntity.ok().build();

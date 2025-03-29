@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "book_pages")
 @NoArgsConstructor
@@ -12,8 +14,9 @@ import lombok.NoArgsConstructor;
 @Data
 public class BookPage {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)

@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import uz.app.entity.BookPage;
 
+import java.util.UUID;
+
 @Repository
-public interface BookPageRepository extends JpaRepository<BookPage, Long> {
+public interface BookPageRepository extends JpaRepository<BookPage, UUID> {
 }

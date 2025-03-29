@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uz.app.entity.enums.OrderStatus;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "orders")
 @NoArgsConstructor
@@ -13,8 +15,9 @@ import uz.app.entity.enums.OrderStatus;
 @Data
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

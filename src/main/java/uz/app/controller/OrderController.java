@@ -19,6 +19,7 @@ import uz.app.repository.ProductRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/orders")
@@ -61,7 +62,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<?> updateOrder(@PathVariable UUID id, @RequestBody OrderDTO orderDTO) {
         Optional<Order> existingOrderOptional = orderRepository.findById(id);
         if (existingOrderOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -99,7 +100,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Long orderId) {
+    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -107,7 +108,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<?> deleteOrder(@PathVariable Long orderId) {
+    public ResponseEntity<?> deleteOrder(@PathVariable UUID orderId) {
         if (!orderRepository.existsById(orderId)) {
             return ResponseEntity.notFound().build();
         }
@@ -118,7 +119,7 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN','OPERATOR')")
     @Tag(name = "Change order's status")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
+    public ResponseEntity<?> updateOrderStatus(@PathVariable UUID id, @RequestParam OrderStatus status) {
         Optional<Order> existingOrderOptional = orderRepository.findById(id);
         if (existingOrderOptional.isEmpty()) {
             return ResponseEntity.notFound().build();

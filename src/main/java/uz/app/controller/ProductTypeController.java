@@ -10,6 +10,7 @@ import uz.app.entity.ProductType;
 import uz.app.repository.ProductTypeRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/product-type")
@@ -20,7 +21,7 @@ public class ProductTypeController {
     private final ProductTypeRepository productTypeRepository;
 
     @GetMapping
-    public ResponseEntity<List<ProductType>> getAll() {
+    public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(productTypeRepository.findAll());
     }
 
@@ -33,14 +34,14 @@ public class ProductTypeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductType> getFromId(@PathVariable Long id) {
+    public ResponseEntity<ProductType> getFromId(@PathVariable UUID id) {
         return productTypeRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductType> update(@PathVariable Long id, @RequestBody NameDTO typeDTO) {
+    public ResponseEntity<ProductType> update(@PathVariable UUID id, @RequestBody NameDTO typeDTO) {
         return productTypeRepository.findById(id)
                 .map(existingType -> {
                     existingType.setName(typeDTO.getName());
@@ -50,7 +51,7 @@ public class ProductTypeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (productTypeRepository.existsById(id)) {
             productTypeRepository.deleteById(id);
             return ResponseEntity.ok().build();

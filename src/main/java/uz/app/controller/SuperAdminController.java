@@ -11,6 +11,7 @@ import uz.app.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /*  PHONE-NUMBER: 111,  PASSWORD: super111.   For logining to system     */
 @RestController
@@ -75,7 +76,7 @@ public class SuperAdminController {
     }
 
     @GetMapping("/admin/{id}")
-    public ResponseEntity<?> getAdminById(@PathVariable Long id) {
+    public ResponseEntity<?> getAdminById(@PathVariable UUID id) {
         Optional<User> userOptional = userRepository.findById(id);
 
         if (userOptional.isEmpty()) {
@@ -100,7 +101,7 @@ public class SuperAdminController {
     }
 
     @GetMapping("/operator/{id}")
-    public ResponseEntity<?> getOperatorById(@PathVariable Long id) {
+    public ResponseEntity<?> getOperatorById(@PathVariable UUID id) {
         Optional<User> userOptional = userRepository.findById(id);
 
         if (userOptional.isEmpty()) {
@@ -125,7 +126,7 @@ public class SuperAdminController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable Long id) {
+    public ResponseEntity<?> getUser(@PathVariable UUID id) {
         Optional<User> userOptional = userRepository.findById(id);
 
         if (userOptional.isEmpty()) {
@@ -194,7 +195,7 @@ public class SuperAdminController {
     }
 
     @PutMapping("/edit-user/{id}")
-    public ResponseEntity<?> editUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<?> editUser(@PathVariable UUID id, @RequestBody UserDTO userDTO) {
         Optional<User> optionalUser = userRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
@@ -227,7 +228,7 @@ public class SuperAdminController {
     }
 
     @DeleteMapping("/delete-admin/{id}")
-    public ResponseEntity<?> deleteAdmin(@PathVariable Long id) {
+    public ResponseEntity<?> deleteAdmin(@PathVariable UUID id) {
         Optional<User> userOptional = userRepository.findById(id);
 
         if (userOptional.isEmpty()) {
@@ -245,7 +246,7 @@ public class SuperAdminController {
     }
 
     @DeleteMapping("/delete-operator/{id}")
-    public ResponseEntity<?> deleteOperator(@PathVariable Long id) {
+    public ResponseEntity<?> deleteOperator(@PathVariable UUID id) {
         Optional<User> userOptional = userRepository.findById(id);
 
         if (userOptional.isEmpty()) {
@@ -263,7 +264,7 @@ public class SuperAdminController {
     }
 
     @DeleteMapping("/delete-user/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         Optional<User> user = userRepository.findById(id);
 
         if (user.isEmpty()) {

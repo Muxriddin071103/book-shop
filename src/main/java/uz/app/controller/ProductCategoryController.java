@@ -10,6 +10,7 @@ import uz.app.entity.ProductCategory;
 import uz.app.repository.ProductCategoryRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/product-category")
@@ -33,14 +34,14 @@ public class ProductCategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductCategory> getFromId(@PathVariable Long id) {
+    public ResponseEntity<ProductCategory> getFromId(@PathVariable UUID id) {
         return productCategoryRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductCategory> update(@PathVariable Long id, @RequestBody NameDTO categoryDTO) {
+    public ResponseEntity<ProductCategory> update(@PathVariable UUID id, @RequestBody NameDTO categoryDTO) {
         return productCategoryRepository.findById(id)
                 .map(existingCategory -> {
                     existingCategory.setName(categoryDTO.getName());
@@ -50,7 +51,7 @@ public class ProductCategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (productCategoryRepository.existsById(id)) {
             productCategoryRepository.deleteById(id);
             return ResponseEntity.ok().build();

@@ -5,8 +5,8 @@ import org.springframework.stereotype.Repository;
 import uz.app.entity.ProductRating;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface ProductRatingRepository extends JpaRepository<ProductRating,Long> {
-    List<ProductRating> findByBook_Id(Long productId);
+public interface ProductRatingRepository extends JpaRepository<ProductRating, UUID> {
 }

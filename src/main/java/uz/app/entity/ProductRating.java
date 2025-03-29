@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "product_ratings")
 @NoArgsConstructor
@@ -12,14 +14,15 @@ import lombok.NoArgsConstructor;
 @Data
 public class ProductRating {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
     private Product book;
 
-    private Long userId;
+    private UUID userId;
     private Integer rating; // 1-5
     private String review;
 }

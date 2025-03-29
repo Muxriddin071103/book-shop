@@ -12,6 +12,7 @@ import uz.app.repository.BookPageRepository;
 import uz.app.repository.ProductRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/book-pages")
@@ -49,14 +50,14 @@ public class BookPageController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookPage> getFromId(@PathVariable Long id) {
+    public ResponseEntity<BookPage> getFromId(@PathVariable UUID id) {
         return bookPageRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookPage> update(@PathVariable Long id, @RequestBody BookPageDTO pageDTO) {
+    public ResponseEntity<BookPage> update(@PathVariable UUID id, @RequestBody BookPageDTO pageDTO) {
         return bookPageRepository.findById(id)
                 .map(existingPage -> {
                     existingPage.setPageNumber(pageDTO.getPageNumber());
@@ -67,7 +68,7 @@ public class BookPageController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (bookPageRepository.existsById(id)) {
             bookPageRepository.deleteById(id);
             return ResponseEntity.ok().build();

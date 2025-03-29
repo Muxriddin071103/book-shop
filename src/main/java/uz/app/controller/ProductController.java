@@ -8,15 +8,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.app.dto.ProductDTO;
-import uz.app.dto.ProductTypeDTO;
 import uz.app.entity.*;
 import uz.app.repository.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -37,7 +33,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getFromId(@PathVariable Long id) {
+    public ResponseEntity<?> getFromId(@PathVariable UUID id) {
         return productRepository
                 .findById(id)
                 .map(ResponseEntity::ok)
@@ -45,16 +41,17 @@ public class ProductController {
     }
 
     @GetMapping("/by-type")
-    public ResponseEntity<List<Map<String, Object>>> getProductsByType() {
+    public ResponseEntity<?> getProductsByType() {
         List<Map<String, Object>> result = productTypeRepository.findAll().stream()
                 .map(type -> {
                     Map<String, Object> typeMap = new HashMap<>();
                     typeMap.put("typeName", type.getName());
 
-                    List<Map<String, Object>> products = productRepository.findTop5ByProductTypeOrderByIdDesc(type).stream()
+                    List<Map<String, Object>> products = productRepository
+                            .findTop5ByProductTypeOrderByIdDesc(type)
+                            .stream()
                             .map(product -> {
                                 Map<String, Object> productMap = new HashMap<>();
-
                                 productMap.put("name", product.getName());
                                 productMap.put("productTypeId", product.getProductType().getId());
                                 productMap.put("productCategoryId", product.getProductCategory().getId());
@@ -66,8 +63,10 @@ public class ProductController {
                                 productMap.put("about", product.getAbout());
 
                                 if (product.getPhoto() != null) {
-                                    productMap.put("photoUrl",
-                                            "/files/" + product.getPhoto().getPrefix() + "/" + product.getPhoto().getName());
+                                    Map<String, Object> photoMap = new HashMap<>();
+                                    photoMap.put("name", product.getPhoto().getName());
+                                    photoMap.put("prefix", product.getPhoto().getPrefix());
+                                    productMap.put("photo", photoMap);
                                 }
 
                                 return productMap;
@@ -82,13 +81,51 @@ public class ProductController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/by-type/{typeName}")
+    public ResponseEntity<?> getProductsByTypeName(@PathVariable String typeName) {
+        Optional<ProductType> productTypeOptional = productTypeRepository.findByName(typeName);
+
+        if (productTypeOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invalid ProductType name");
+        }
+
+        ProductType productType = productTypeOptional.get();
+
+        List<Map<String, Object>> products = productRepository.findByProductType(productType)
+                .stream()
+                .map(product -> {
+                    Map<String, Object> productMap = new HashMap<>();
+                    productMap.put("name", product.getName());
+                    productMap.put("productTypeId", product.getProductType().getId());
+                    productMap.put("productCategoryId", product.getProductCategory().getId());
+                    productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
+                    productMap.put("price", product.getPrice());
+                    productMap.put("salePrice", product.getSalePrice());
+                    productMap.put("quantity", product.getQuantity());
+                    productMap.put("description", product.getDescription());
+                    productMap.put("about", product.getAbout());
+
+                    if (product.getPhoto() != null) {
+                        Map<String, Object> photoMap = new HashMap<>();
+                        photoMap.put("name", product.getPhoto().getName());
+                        photoMap.put("prefix", product.getPhoto().getPrefix());
+                        productMap.put("photo", photoMap);
+                    }
+
+                    return productMap;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(products);
+    }
+
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> addProduct(
             @RequestParam("name") String name,
-            @RequestParam("productTypeId") Long productTypeId,
-            @RequestParam("productCategoryId") Long productCategoryId,
-            @RequestParam(value = "authorId", required = false) Long authorId,
+            @RequestParam("productTypeId") UUID productTypeId,
+            @RequestParam("productCategoryId") UUID productCategoryId,
+            @RequestParam(value = "authorId", required = false) UUID authorId,
             @RequestParam("price") Double price,
             @RequestParam("salePrice") Double salePrice,
             @RequestParam("quantity") Integer quantity,
@@ -130,7 +167,7 @@ public class ProductController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> update(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestPart ProductDTO productDTO,
             @RequestPart(required = false) MultipartFile photo) throws IOException {
 
@@ -172,7 +209,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable UUID id) {
         Optional<Product> productOptional = productRepository.findById(id);
         if (productOptional.isEmpty()) {
             return ResponseEntity.notFound().build();

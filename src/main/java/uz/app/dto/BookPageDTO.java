@@ -2,9 +2,11 @@ package uz.app.dto;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class BookPageDTO {
-    private Long bookId;
+    private UUID bookId;
     private Integer pageNumber;
     private String content;
 }

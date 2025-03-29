@@ -14,6 +14,7 @@ import uz.app.util.UserUtil;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/product-rating")
@@ -26,7 +27,7 @@ public class ProductRatingController {
     private final UserUtil userUtil; // Inject UserUtil
 
     @GetMapping
-    public ResponseEntity<List<ProductRating>> getAll() {
+    public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(productRatingRepository.findAll());
     }
 
@@ -54,14 +55,14 @@ public class ProductRatingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductRating> getFromId(@PathVariable Long id) {
+    public ResponseEntity<ProductRating> getFromId(@PathVariable UUID id) {
         return productRatingRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProductRatingDTO ratingDTO) {
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody ProductRatingDTO ratingDTO) {
         Optional<User> currentUser = userUtil.getCurrentUser();
 
         if (currentUser.isEmpty()) {
@@ -88,7 +89,7 @@ public class ProductRatingController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable UUID id) {
         Optional<User> currentUser = userUtil.getCurrentUser();
 
         if (currentUser.isEmpty()) {

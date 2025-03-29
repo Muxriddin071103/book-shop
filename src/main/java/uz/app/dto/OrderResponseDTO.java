@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import uz.app.entity.enums.OrderStatus;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 public class OrderResponseDTO {
-    private Long orderId;
+    private UUID orderId;
     private UserDTO user;
     private ProductDTO product;
     private int quantity;
