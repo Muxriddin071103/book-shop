@@ -83,9 +83,9 @@ public class ProductController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/by-type/{typeName}")
-    public ResponseEntity<?> getProductsByTypeName(@PathVariable String typeName) {
-        if (typeName.equalsIgnoreCase("all")) {
+    @GetMapping("/by-type/{typeId}")
+    public ResponseEntity<?> getProductsByTypeName(@PathVariable String typeId) {
+        if (typeId.equalsIgnoreCase("all")) {
             List<Map<String, Object>> allProducts = productRepository.findAll()
                     .stream()
                     .map(product -> {
@@ -115,7 +115,7 @@ public class ProductController {
             return ResponseEntity.ok(allProducts);
         }
 
-        Optional<ProductType> productTypeOptional = productTypeRepository.findByName(typeName);
+        Optional<ProductType> productTypeOptional = productTypeRepository.findById(UUID.fromString(typeId));
 
         if (productTypeOptional.isEmpty()) {
             return ResponseEntity.badRequest().body("Invalid ProductType name");
