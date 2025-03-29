@@ -45,6 +45,7 @@ public class ProductController {
         List<Map<String, Object>> result = productTypeRepository.findAll().stream()
                 .map(type -> {
                     Map<String, Object> typeMap = new LinkedHashMap<>();
+                    typeMap.put("id", type.getId());
                     typeMap.put("typeName", type.getName());
 
                     List<Map<String, Object>> products = productRepository
@@ -64,7 +65,7 @@ public class ProductController {
                                 productMap.put("about", product.getAbout());
 
                                 if (product.getPhoto() != null) {
-                                    Map<String, Object> photoMap = new HashMap<>();
+                                    Map<String, Object> photoMap = new LinkedHashMap<>();
                                     photoMap.put("name", product.getPhoto().getName());
                                     photoMap.put("prefix", product.getPhoto().getPrefix());
                                     productMap.put("photo", photoMap);
@@ -88,8 +89,8 @@ public class ProductController {
             List<Map<String, Object>> allProducts = productRepository.findAll()
                     .stream()
                     .map(product -> {
-                        Map<String, Object> productMap = new HashMap<>();
-                        productMap.put("id",product.getId());
+                        Map<String, Object> productMap = new LinkedHashMap<>();
+                        productMap.put("id", product.getId());
                         productMap.put("name", product.getName());
                         productMap.put("productTypeId", product.getProductType().getId());
                         productMap.put("productCategoryId", product.getProductCategory().getId());
@@ -101,7 +102,7 @@ public class ProductController {
                         productMap.put("about", product.getAbout());
 
                         if (product.getPhoto() != null) {
-                            Map<String, Object> photoMap = new HashMap<>();
+                            Map<String, Object> photoMap = new LinkedHashMap<>();
                             photoMap.put("name", product.getPhoto().getName());
                             photoMap.put("prefix", product.getPhoto().getPrefix());
                             productMap.put("photo", photoMap);
@@ -122,11 +123,15 @@ public class ProductController {
 
         ProductType productType = productTypeOptional.get();
 
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("productTypeId", productType.getId());
+        response.put("typeName", productType.getName());
+
         List<Map<String, Object>> products = productRepository.findByProductType(productType)
                 .stream()
                 .map(product -> {
-                    Map<String, Object> productMap = new HashMap<>();
-                    productMap.put("id",product.getId());
+                    Map<String, Object> productMap = new LinkedHashMap<>();
+                    productMap.put("id", product.getId());
                     productMap.put("name", product.getName());
                     productMap.put("productTypeId", product.getProductType().getId());
                     productMap.put("productCategoryId", product.getProductCategory().getId());
@@ -138,7 +143,7 @@ public class ProductController {
                     productMap.put("about", product.getAbout());
 
                     if (product.getPhoto() != null) {
-                        Map<String, Object> photoMap = new HashMap<>();
+                        Map<String, Object> photoMap = new LinkedHashMap<>();
                         photoMap.put("name", product.getPhoto().getName());
                         photoMap.put("prefix", product.getPhoto().getPrefix());
                         productMap.put("photo", photoMap);
@@ -148,7 +153,9 @@ public class ProductController {
                 })
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(products);
+        response.put("products", products);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
