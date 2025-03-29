@@ -83,6 +83,35 @@ public class ProductController {
 
     @GetMapping("/by-type/{typeName}")
     public ResponseEntity<?> getProductsByTypeName(@PathVariable String typeName) {
+        if (typeName.equalsIgnoreCase("all")) {
+            List<Map<String, Object>> allProducts = productRepository.findAll()
+                    .stream()
+                    .map(product -> {
+                        Map<String, Object> productMap = new HashMap<>();
+                        productMap.put("name", product.getName());
+                        productMap.put("productTypeId", product.getProductType().getId());
+                        productMap.put("productCategoryId", product.getProductCategory().getId());
+                        productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
+                        productMap.put("price", product.getPrice());
+                        productMap.put("salePrice", product.getSalePrice());
+                        productMap.put("quantity", product.getQuantity());
+                        productMap.put("description", product.getDescription());
+                        productMap.put("about", product.getAbout());
+
+                        if (product.getPhoto() != null) {
+                            Map<String, Object> photoMap = new HashMap<>();
+                            photoMap.put("name", product.getPhoto().getName());
+                            photoMap.put("prefix", product.getPhoto().getPrefix());
+                            productMap.put("photo", photoMap);
+                        }
+
+                        return productMap;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(allProducts);
+        }
+
         Optional<ProductType> productTypeOptional = productTypeRepository.findByName(typeName);
 
         if (productTypeOptional.isEmpty()) {
