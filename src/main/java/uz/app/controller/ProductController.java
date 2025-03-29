@@ -169,11 +169,11 @@ public class ProductController {
 
         String searchQuery = "%" + query.toLowerCase() + "%";
         List<Product> products;
-        boolean productsExistInOtherTypes = false;
 
         if (typeId == null || typeId.equalsIgnoreCase("all")) {
             products = productRepository.searchAllProducts(searchQuery);
-        } else {
+        }
+        else {
             try {
                 UUID productTypeUUID = UUID.fromString(typeId);
                 Optional<ProductType> productType = productTypeRepository.findById(productTypeUUID);
@@ -183,52 +183,37 @@ public class ProductController {
                 }
 
                 products = productRepository.searchByProductType(productType.get().getId(), searchQuery);
-
-                if (products.isEmpty()) {
-                    List<Product> allProducts = productRepository.searchAllProducts(searchQuery);
-                    productsExistInOtherTypes = !allProducts.isEmpty();
-                }
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().body("Invalid ProductType ID format");
             }
         }
 
-        if (products.isEmpty()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", productsExistInOtherTypes
-                    ? "No products found in this category, but matching products exist in other categories"
-                    : "No products found matching your search");
-            return ResponseEntity.ok(response);
-        }
-
         List<Map<String, Object>> result = products.stream()
-                .map(this::convertProductToMap)
+                .map(product -> {
+                    Map<String, Object> productMap = new LinkedHashMap<>();
+                    productMap.put("id", product.getId());
+                    productMap.put("name", product.getName());
+                    productMap.put("productTypeId", product.getProductType().getId());
+                    productMap.put("productCategoryId", product.getProductCategory().getId());
+                    productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
+                    productMap.put("price", product.getPrice());
+                    productMap.put("salePrice", product.getSalePrice());
+                    productMap.put("quantity", product.getQuantity());
+                    productMap.put("description", product.getDescription());
+                    productMap.put("about", product.getAbout());
+
+                    if (product.getPhoto() != null) {
+                        Map<String, Object> photoMap = new LinkedHashMap<>();
+                        photoMap.put("name", product.getPhoto().getName());
+                        photoMap.put("prefix", product.getPhoto().getPrefix());
+                        productMap.put("photo", photoMap);
+                    }
+
+                    return productMap;
+                })
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
-    }
-
-    private Map<String, Object> convertProductToMap(Product product) {
-        Map<String, Object> productMap = new LinkedHashMap<>();
-        productMap.put("id", product.getId());
-        productMap.put("name", product.getName());
-        productMap.put("productTypeId", product.getProductType().getId());
-        productMap.put("productCategoryId", product.getProductCategory().getId());
-        productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
-        productMap.put("price", product.getPrice());
-        productMap.put("salePrice", product.getSalePrice());
-        productMap.put("quantity", product.getQuantity());
-        productMap.put("description", product.getDescription());
-        productMap.put("about", product.getAbout());
-
-        if (product.getPhoto() != null) {
-            Map<String, Object> photoMap = new LinkedHashMap<>();
-            photoMap.put("name", product.getPhoto().getName());
-            photoMap.put("prefix", product.getPhoto().getPrefix());
-            productMap.put("photo", photoMap);
-        }
-
-        return productMap;
     }
 
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
