@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.app.dto.ProductDTO;
+import uz.app.dto.ProductTypeDTO;
 import uz.app.entity.*;
 import uz.app.repository.*;
 
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/products")
@@ -30,13 +32,11 @@ public class ProductController {
     private final AttachmentRepository attachmentRepository;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getAllProducts() {
         return ResponseEntity.ok(productRepository.findAll());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getFromId(@PathVariable Long id) {
         return productRepository
                 .findById(id)
@@ -45,15 +45,39 @@ public class ProductController {
     }
 
     @GetMapping("/by-type")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getProductsByType() {
-        List<ProductType> productTypes = productTypeRepository.findAll();
-        Map<String, List<Product>> result = new HashMap<>();
+    public ResponseEntity<List<Map<String, Object>>> getProductsByType() {
+        List<Map<String, Object>> result = productTypeRepository.findAll().stream()
+                .map(type -> {
+                    Map<String, Object> typeMap = new HashMap<>();
+                    typeMap.put("typeName", type.getName());
 
-        for (ProductType type : productTypes) {
-            List<Product> products = productRepository.findTop5ByProductTypeOrderByIdDesc(type);
-            result.put(type.getName(), products);
-        }
+                    List<Map<String, Object>> products = productRepository.findTop5ByProductTypeOrderByIdDesc(type).stream()
+                            .map(product -> {
+                                Map<String, Object> productMap = new HashMap<>();
+
+                                productMap.put("name", product.getName());
+                                productMap.put("productTypeId", product.getProductType().getId());
+                                productMap.put("productCategoryId", product.getProductCategory().getId());
+                                productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
+                                productMap.put("price", product.getPrice());
+                                productMap.put("salePrice", product.getSalePrice());
+                                productMap.put("quantity", product.getQuantity());
+                                productMap.put("description", product.getDescription());
+                                productMap.put("about", product.getAbout());
+
+                                if (product.getPhoto() != null) {
+                                    productMap.put("photoUrl",
+                                            "/files/" + product.getPhoto().getPrefix() + "/" + product.getPhoto().getName());
+                                }
+
+                                return productMap;
+                            })
+                            .collect(Collectors.toList());
+
+                    typeMap.put("products", products);
+                    return typeMap;
+                })
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
     }
