@@ -56,12 +56,13 @@ public class MyConfig {
                 }))
                 .addFilterBefore(myFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/", "/swagger-ui/**", "/v3/api-docs/**","/**").permitAll()
+                        .requestMatchers("/auth/**", "/", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/operator/**").hasRole("OPERATOR")
                         .requestMatchers("/files/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest()
+                        .authenticated()
                 );
 
         return http.build();

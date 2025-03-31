@@ -20,8 +20,11 @@ public class Order {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id",nullable=true)
     private User user;
+
+    private String customerFullName;
+    private String customerPhoneNumber;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)

@@ -49,6 +49,8 @@ public class OrderController {
 
         Order newOrder = new Order();
         newOrder.setUser(user);
+        newOrder.setCustomerFullName(orderDTO.getCustomerFullName());
+        newOrder.setCustomerPhoneNumber(orderDTO.getCustomerPhoneNumber());
         newOrder.setProduct(product);
         newOrder.setQuantity(orderDTO.getQuantity());
         newOrder.setTotalPrice(totalPrice);
@@ -83,6 +85,8 @@ public class OrderController {
         product.setQuantity(product.getQuantity() + oldQuantity - newQuantity);
         productRepository.save(product);
 
+        existingOrder.setCustomerFullName(orderDTO.getCustomerFullName());
+        existingOrder.setCustomerPhoneNumber(orderDTO.getCustomerPhoneNumber());
         existingOrder.setQuantity(newQuantity);
         existingOrder.setTotalPrice(product.getPrice() * newQuantity);
         orderRepository.save(existingOrder);
@@ -145,6 +149,7 @@ public class OrderController {
         productDTO.setName(product.getName());
         productDTO.setProductTypeId(product.getProductType().getId());
         productDTO.setProductCategoryId(product.getProductCategory().getId());
+        productDTO.setAuthorId(product.getAuthor().getId());
         productDTO.setPrice(product.getPrice());
         productDTO.setSalePrice(product.getSalePrice());
         productDTO.setQuantity(product.getQuantity());
@@ -153,13 +158,8 @@ public class OrderController {
 
         return new OrderResponseDTO(
                 order.getId(),
-                new UserDTO(
-                        order.getUser().getFirstName(),
-                        order.getUser().getLastName(),
-                        order.getUser().getBirthYear(),
-                        order.getUser().getPhoneNumber(),
-                        order.getUser().getRole()
-                ),
+                order.getCustomerFullName(),
+                order.getCustomerPhoneNumber(),
                 productDTO,
                 order.getQuantity(),
                 order.getTotalPrice(),
