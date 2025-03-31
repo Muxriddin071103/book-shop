@@ -42,22 +42,19 @@ public class AuthController {
                 .birthYear(signUpDTO.getBirthYear())
                 .role(Role.USER)
                 .createdAt(LocalDateTime.now())
-                .enabled(false)
+                .enabled(true)
                 .build();
 
         userRepository.save(user);
-        return ResponseEntity.ok(user);
+
+        String token = jwtProvider.generateToken(user);
+        return ResponseEntity.ok("Here is your token: " + token);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
         User user = userRepository.findByPhoneNumber(loginDTO.getPhoneNumber())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!user.isEnabled()) {
-            user.setEnabled(true);
-            userRepository.save(user);
-        }
 
         if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
             return ResponseEntity.badRequest().body("Wrong password");
