@@ -28,18 +28,23 @@ public class BookPageController {
         return ResponseEntity.ok(bookPageRepository.findAll());
     }
 
+    @GetMapping("/by-book/{bookId}")
+    public ResponseEntity<?> getPagesByBookId(@PathVariable UUID bookId) {
+        if (!productRepository.existsById(bookId)) {
+            return ResponseEntity.badRequest().body("Book not found");
+        }
+        List<BookPage> pages = bookPageRepository.findByBookId(bookId);
+        return ResponseEntity.ok(pages);
+    }
+
     @PostMapping
     public ResponseEntity<?> addPage(@RequestBody BookPageDTO pageDTO) {
-        System.out.println("Book ID: " + pageDTO.getBookId());
-
         Product book = productRepository.findById(pageDTO.getBookId())
                 .orElse(null);
 
         if (book == null) {
             return ResponseEntity.badRequest().body("Book not found");
         }
-
-        System.out.println("Book found: " + book.getName());
 
         BookPage page = new BookPage();
         page.setBook(book);
