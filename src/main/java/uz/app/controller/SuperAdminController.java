@@ -3,12 +3,17 @@ package uz.app.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import uz.app.config.JwtProvider;
+import uz.app.dto.AdminOperatorDTO;
 import uz.app.dto.UserDTO;
 import uz.app.entity.User;
 import uz.app.entity.enums.Role;
 import uz.app.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,8 +23,10 @@ import java.util.UUID;
 @RequestMapping("/super-admin")
 @RequiredArgsConstructor
 @Tag(name = "Super Admin Controller",description = "Only Super Admin can manage")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class SuperAdminController {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/users")
     public ResponseEntity<?> getUsers() {
@@ -151,47 +158,47 @@ public class SuperAdminController {
     }
 
     @PostMapping("/add-admin")
-    public ResponseEntity<UserDTO> addAdmin(@RequestBody UserDTO userDTO) {
-        User user = new User();
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setBirthYear(userDTO.getBirthYear());
-        user.setPhoneNumber(userDTO.getPhoneNumber());
-        user.setRole(Role.ADMIN);
+    public ResponseEntity<?> addAdmin(@RequestBody AdminOperatorDTO dto) {
+        if (userRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            return ResponseEntity.badRequest().body("Phone number is already in use");
+        }
 
-        User savedUser = userRepository.save(user);
+        User admin = User.builder()
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .phoneNumber(dto.getPhoneNumber())
+                .birthYear(dto.getBirthYear())
+                .role(Role.ADMIN)
+                .createdAt(LocalDateTime.now())
+                .enabled(true)
+                .build();
 
-        UserDTO savedUserDTO = new UserDTO(
-                savedUser.getFirstName(),
-                savedUser.getLastName(),
-                savedUser.getBirthYear(),
-                savedUser.getPhoneNumber(),
-                savedUser.getRole()
-        );
+        userRepository.save(admin);
 
-        return ResponseEntity.ok(savedUserDTO);
+        return ResponseEntity.ok("Admin added successfully.");
     }
 
     @PostMapping("/add-operator")
-    public ResponseEntity<?> addOperator(@RequestBody UserDTO userDTO) {
-        User user = new User();
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setBirthYear(userDTO.getBirthYear());
-        user.setPhoneNumber(userDTO.getPhoneNumber());
-        user.setRole(Role.OPERATOR);
+    public ResponseEntity<?> addOperator(@RequestBody AdminOperatorDTO dto) {
+        if (userRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            return ResponseEntity.badRequest().body("Phone number is already in use");
+        }
 
-        User savedUser = userRepository.save(user);
+        User operator = User.builder()
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .phoneNumber(dto.getPhoneNumber())
+                .birthYear(dto.getBirthYear())
+                .role(Role.OPERATOR)
+                .createdAt(LocalDateTime.now())
+                .enabled(true)
+                .build();
 
-        UserDTO savedUserDTO = new UserDTO(
-                savedUser.getFirstName(),
-                savedUser.getLastName(),
-                savedUser.getBirthYear(),
-                savedUser.getPhoneNumber(),
-                savedUser.getRole()
-        );
+        userRepository.save(operator);
 
-        return ResponseEntity.ok(savedUserDTO);
+        return ResponseEntity.ok("Operator added successfully.");
     }
 
     @PutMapping("/edit-user/{id}")

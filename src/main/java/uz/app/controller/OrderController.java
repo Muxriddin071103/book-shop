@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import uz.app.dto.OrderDTO;
 import uz.app.dto.OrderResponseDTO;
 import uz.app.dto.ProductDTO;
-import uz.app.dto.UserDTO;
 import uz.app.entity.Order;
 import uz.app.entity.Product;
 import uz.app.entity.User;
@@ -95,8 +94,10 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
-        List<OrderResponseDTO> orderDTOs = orderRepository.findAll().stream()
+    public ResponseEntity<?> getAllOrders() {
+        List<OrderResponseDTO> orderDTOs = orderRepository
+                .findAll()
+                .stream()
                 .map(this::convertToOrderResponseDTO)
                 .toList();
 
