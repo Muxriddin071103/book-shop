@@ -1,4 +1,9 @@
 spring:
+  mvc:
+    static-path-pattern: /**
+  web:
+    resources:
+      static-locations: classpath:/static/
   servlet:
     multipart:
       enabled: true

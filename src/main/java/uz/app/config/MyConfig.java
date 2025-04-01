@@ -60,7 +60,7 @@ public class MyConfig {
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/operator/**").hasRole("OPERATOR")
-                        .requestMatchers("/files/**").permitAll()
+                        .requestMatchers("/files/**", "/static/**", "/images/**", "/css/**", "/js/**").permitAll()
                         .anyRequest()
                         .authenticated()
                 );
