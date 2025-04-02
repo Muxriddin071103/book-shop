@@ -23,5 +23,7 @@ public class BookPage {
     private Product book;
 
     private Integer pageNumber;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
 }
