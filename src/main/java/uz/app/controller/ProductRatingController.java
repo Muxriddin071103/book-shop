@@ -24,11 +24,24 @@ import java.util.UUID;
 public class ProductRatingController {
     private final ProductRatingRepository productRatingRepository;
     private final ProductRepository productRepository;
-    private final UserUtil userUtil; // Inject UserUtil
+    private final UserUtil userUtil;
 
     @GetMapping
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(productRatingRepository.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductRating> getFromId(@PathVariable UUID id) {
+        return productRatingRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<List<ProductRating>> getRatingsByProductId(@PathVariable UUID productId) {
+        List<ProductRating> ratings = productRatingRepository.findByBookId(productId);
+        return ResponseEntity.ok(ratings);
     }
 
     @PostMapping
@@ -52,13 +65,6 @@ public class ProductRatingController {
                     return ResponseEntity.ok(productRatingRepository.save(rating));
                 })
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductRating> getFromId(@PathVariable UUID id) {
-        return productRatingRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")

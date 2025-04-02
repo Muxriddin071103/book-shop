@@ -9,4 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRatingRepository extends JpaRepository<ProductRating, UUID> {
+    List<ProductRating> findByBookId(UUID productId);
 }

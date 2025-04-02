@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uz.app.entity.enums.OrderStatus;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,17 +22,15 @@ public class Order {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id",nullable=true)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     private String customerFullName;
     private String customerPhoneNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderedProduct> orderedProducts;
 
-    private Integer quantity;
     private Double totalPrice;
 
     @Enumerated(EnumType.STRING)

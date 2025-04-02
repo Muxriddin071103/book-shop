@@ -6,19 +6,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import uz.app.dto.OrderDTO;
-import uz.app.dto.OrderResponseDTO;
-import uz.app.dto.ProductDTO;
+import uz.app.dto.*;
 import uz.app.entity.Order;
+import uz.app.entity.OrderedProduct;
 import uz.app.entity.Product;
 import uz.app.entity.User;
 import uz.app.entity.enums.OrderStatus;
 import uz.app.repository.OrderRepository;
+import uz.app.repository.OrderedProductRepository;
 import uz.app.repository.ProductRepository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orders")
@@ -27,36 +26,67 @@ import java.util.UUID;
 public class OrderController {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final OrderedProductRepository orderedProductRepository;
 
     @PostMapping
     public ResponseEntity<?> addOrder(@RequestBody OrderDTO orderDTO, @AuthenticationPrincipal User user) {
-        Optional<Product> productOptional = productRepository.findById(orderDTO.getProductId());
+        List<UUID> productIds = orderDTO.getProducts().stream()
+                .map(OrderProductDTO::getProductId)
+                .collect(Collectors.toList());
 
-        if (productOptional.isEmpty()) {
-            return ResponseEntity.badRequest().body("Product not found");
+        Map<UUID, Product> productMap = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        List<String> errors = new ArrayList<>();
+        for (OrderProductDTO orderProduct : orderDTO.getProducts()) {
+            Product product = productMap.get(orderProduct.getProductId());
+            if (product == null) {
+                errors.add("Product not found with ID: " + orderProduct.getProductId());
+                continue;
+            }
+            if (orderProduct.getAmount() <= 0) {
+                errors.add("Quantity must be greater than 0 for product: " + product.getName());
+            }
+            if (product.getQuantity() < orderProduct.getAmount()) {
+                errors.add("Not enough stock available for product: " + product.getName());
+            }
         }
 
-        Product product = productOptional.get();
-        if (orderDTO.getQuantity() <= 0) {
-            return ResponseEntity.badRequest().body("Quantity must be greater than 0");
+        if (!errors.isEmpty()) {
+            return ResponseEntity.badRequest().body(errors);
         }
-        if (product.getQuantity() < orderDTO.getQuantity()) {
-            return ResponseEntity.badRequest().body("Not enough stock available");
-        }
-
-        double totalPrice = product.getPrice() * orderDTO.getQuantity();
 
         Order newOrder = new Order();
         newOrder.setUser(user);
         newOrder.setCustomerFullName(orderDTO.getCustomerFullName());
         newOrder.setCustomerPhoneNumber(orderDTO.getCustomerPhoneNumber());
-        newOrder.setProduct(product);
-        newOrder.setQuantity(orderDTO.getQuantity());
-        newOrder.setTotalPrice(totalPrice);
         newOrder.setStatus(OrderStatus.IN_PROGRESS);
+        newOrder.setTotalPrice(0.0);
 
-        product.setQuantity(product.getQuantity() - orderDTO.getQuantity());
-        productRepository.save(product);
+        newOrder = orderRepository.save(newOrder);
+
+        double totalPrice = 0;
+        List<OrderedProduct> orderedProducts = new ArrayList<>();
+
+        for (OrderProductDTO orderProductDTO : orderDTO.getProducts()) {
+            Product product = productMap.get(orderProductDTO.getProductId());
+            int quantity = orderProductDTO.getAmount();
+
+            OrderedProduct orderedProduct = new OrderedProduct();
+            orderedProduct.setOrder(newOrder);
+            orderedProduct.setProduct(product);
+            orderedProduct.setQuantity(quantity);
+            orderedProducts.add(orderedProduct);
+
+            totalPrice += product.getPrice() * quantity;
+
+            product.setQuantity(product.getQuantity() - quantity);
+            productRepository.save(product);
+        }
+
+        orderedProductRepository.saveAll(orderedProducts);
+        newOrder.setTotalPrice(totalPrice);
+        newOrder.setOrderedProducts(orderedProducts);
         orderRepository.save(newOrder);
 
         return ResponseEntity.ok(convertToOrderResponseDTO(newOrder));
@@ -70,24 +100,71 @@ public class OrderController {
         }
 
         Order existingOrder = existingOrderOptional.get();
-        Product product = existingOrder.getProduct();
-        int oldQuantity = existingOrder.getQuantity();
-        int newQuantity = orderDTO.getQuantity();
 
-        if (newQuantity <= 0) {
-            return ResponseEntity.badRequest().body("Quantity must be greater than 0");
-        }
-        if (newQuantity > product.getQuantity() + oldQuantity) {
-            return ResponseEntity.badRequest().body("Not enough stock available");
+        for (OrderedProduct orderedProduct : existingOrder.getOrderedProducts()) {
+            Product product = orderedProduct.getProduct();
+            product.setQuantity(product.getQuantity() + orderedProduct.getQuantity());
+            productRepository.save(product);
         }
 
-        product.setQuantity(product.getQuantity() + oldQuantity - newQuantity);
-        productRepository.save(product);
+        List<UUID> productIds = orderDTO.getProducts().stream()
+                .map(OrderProductDTO::getProductId)
+                .collect(Collectors.toList());
+
+        Map<UUID, Product> productMap = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        List<String> errors = new ArrayList<>();
+        for (OrderProductDTO orderProduct : orderDTO.getProducts()) {
+            Product product = productMap.get(orderProduct.getProductId());
+            if (product == null) {
+                errors.add("Product not found with ID: " + orderProduct.getProductId());
+                continue;
+            }
+            if (orderProduct.getAmount() <= 0) {
+                errors.add("Quantity must be greater than 0 for product: " + product.getName());
+            }
+            if (product.getQuantity() < orderProduct.getAmount()) {
+                errors.add("Not enough stock available for product: " + product.getName());
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            for (OrderedProduct orderedProduct : existingOrder.getOrderedProducts()) {
+                Product product = orderedProduct.getProduct();
+                product.setQuantity(product.getQuantity() - orderedProduct.getQuantity());
+                productRepository.save(product);
+            }
+            return ResponseEntity.badRequest().body(errors);
+        }
 
         existingOrder.setCustomerFullName(orderDTO.getCustomerFullName());
         existingOrder.setCustomerPhoneNumber(orderDTO.getCustomerPhoneNumber());
-        existingOrder.setQuantity(newQuantity);
-        existingOrder.setTotalPrice(product.getPrice() * newQuantity);
+
+        existingOrder.getOrderedProducts().clear();
+        orderRepository.save(existingOrder);
+
+        double totalPrice = 0;
+        List<OrderedProduct> newOrderedProducts = new ArrayList<>();
+
+        for (OrderProductDTO orderProductDTO : orderDTO.getProducts()) {
+            Product product = productMap.get(orderProductDTO.getProductId());
+            int quantity = orderProductDTO.getAmount();
+
+            OrderedProduct orderedProduct = new OrderedProduct();
+            orderedProduct.setOrder(existingOrder);
+            orderedProduct.setProduct(product);
+            orderedProduct.setQuantity(quantity);
+            newOrderedProducts.add(orderedProduct);
+
+            totalPrice += product.getPrice() * quantity;
+
+            product.setQuantity(product.getQuantity() - quantity);
+            productRepository.save(product);
+        }
+
+        existingOrder.getOrderedProducts().addAll(newOrderedProducts);
+        existingOrder.setTotalPrice(totalPrice);
         orderRepository.save(existingOrder);
 
         return ResponseEntity.ok(convertToOrderResponseDTO(existingOrder));
@@ -99,7 +176,7 @@ public class OrderController {
                 .findAll()
                 .stream()
                 .map(this::convertToOrderResponseDTO)
-                .toList();
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(orderDTOs);
     }
@@ -114,10 +191,19 @@ public class OrderController {
 
     @DeleteMapping("/{orderId}")
     public ResponseEntity<?> deleteOrder(@PathVariable UUID orderId) {
-        if (!orderRepository.existsById(orderId)) {
+        Optional<Order> orderOptional = orderRepository.findById(orderId);
+        if (orderOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        orderRepository.deleteById(orderId);
+
+        Order order = orderOptional.get();
+        for (OrderedProduct orderedProduct : order.getOrderedProducts()) {
+            Product product = orderedProduct.getProduct();
+            product.setQuantity(product.getQuantity() + orderedProduct.getQuantity());
+            productRepository.save(product);
+        }
+
+        orderRepository.delete(order);
         return ResponseEntity.ok("Order deleted successfully");
     }
 
@@ -131,11 +217,22 @@ public class OrderController {
         }
 
         Order order = existingOrderOptional.get();
-        Product product = order.getProduct();
 
         if (status == OrderStatus.CANCELLED) {
-            product.setQuantity(product.getQuantity() + order.getQuantity());
-            productRepository.save(product);
+            for (OrderedProduct orderedProduct : order.getOrderedProducts()) {
+                Product product = orderedProduct.getProduct();
+                product.setQuantity(product.getQuantity() + orderedProduct.getQuantity());
+                productRepository.save(product);
+            }
+        } else if (order.getStatus() == OrderStatus.CANCELLED && status != OrderStatus.CANCELLED) {
+            for (OrderedProduct orderedProduct : order.getOrderedProducts()) {
+                Product product = orderedProduct.getProduct();
+                if (product.getQuantity() < orderedProduct.getQuantity()) {
+                    return ResponseEntity.badRequest().body("Not enough stock available for product: " + product.getName());
+                }
+                product.setQuantity(product.getQuantity() - orderedProduct.getQuantity());
+                productRepository.save(product);
+            }
         }
 
         order.setStatus(status);
@@ -145,26 +242,28 @@ public class OrderController {
     }
 
     private OrderResponseDTO convertToOrderResponseDTO(Order order) {
-        Product product = order.getProduct();
-        ProductDTO productDTO = new ProductDTO();
-        productDTO.setName(product.getName());
-        productDTO.setProductTypeId(product.getProductType().getId());
-        productDTO.setProductCategoryId(product.getProductCategory().getId());
-        productDTO.setAuthorId(product.getAuthor().getId());
-        productDTO.setPrice(product.getPrice());
-        productDTO.setSalePrice(product.getSalePrice());
-        productDTO.setQuantity(product.getQuantity());
-        productDTO.setDescription(product.getDescription());
-        productDTO.setAbout(product.getAbout());
+        List<OrderResponseDTO.OrderProductResponseDTO> productDTOs = order
+                .getOrderedProducts()
+                .stream()
+                .map(orderedProduct -> {
+                    Product product = orderedProduct.getProduct();
+                    return OrderResponseDTO.OrderProductResponseDTO.builder()
+                            .productId(product.getId())
+                            .productName(product.getName())
+                            .quantity(orderedProduct.getQuantity())
+                            .price(product.getPrice())
+                            .totalPrice(product.getPrice() * orderedProduct.getQuantity())
+                            .build();
+                })
+                .collect(Collectors.toList());
 
-        return new OrderResponseDTO(
-                order.getId(),
-                order.getCustomerFullName(),
-                order.getCustomerPhoneNumber(),
-                productDTO,
-                order.getQuantity(),
-                order.getTotalPrice(),
-                order.getStatus()
-        );
+        return OrderResponseDTO.builder()
+                .orderId(order.getId())
+                .customerFullName(order.getCustomerFullName())
+                .customerPhoneNumber(order.getCustomerPhoneNumber())
+                .products(productDTOs)
+                .totalPrice(order.getTotalPrice())
+                .status(order.getStatus())
+                .build();
     }
 }

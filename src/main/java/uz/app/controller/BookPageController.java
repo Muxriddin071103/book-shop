@@ -17,17 +17,18 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/book-pages")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-@Tag(name = "Book Page Management", description = "Only Admin & Super Admin can manage")
+@Tag(name = "Book Page Management")
 public class BookPageController {
     private final BookPageRepository bookPageRepository;
     private final ProductRepository productRepository;
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<BookPage>> getAll() {
         return ResponseEntity.ok(bookPageRepository.findAll());
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/by-book/{bookId}")
     public ResponseEntity<?> getPagesByBookId(@PathVariable UUID bookId) {
         if (!productRepository.existsById(bookId)) {
@@ -37,6 +38,15 @@ public class BookPageController {
         return ResponseEntity.ok(pages);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<BookPage> getFromId(@PathVariable UUID id) {
+        return bookPageRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @PostMapping
     public ResponseEntity<?> addPage(@RequestBody BookPageDTO pageDTO) {
         Product book = productRepository.findById(pageDTO.getBookId())
@@ -54,14 +64,8 @@ public class BookPageController {
         return ResponseEntity.ok(bookPageRepository.save(page));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<BookPage> getFromId(@PathVariable UUID id) {
-        return bookPageRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<BookPage> update(@PathVariable UUID id, @RequestBody BookPageDTO pageDTO) {
         return bookPageRepository.findById(id)
                 .map(existingPage -> {
@@ -73,6 +77,7 @@ public class BookPageController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (bookPageRepository.existsById(id)) {
             bookPageRepository.deleteById(id);
