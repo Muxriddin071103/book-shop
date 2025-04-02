@@ -26,17 +26,51 @@ public class ProductController {
     private final ProductCategoryRepository productCategoryRepository;
     private final AuthorRepository authorRepository;
     private final AttachmentRepository attachmentRepository;
+    private final ProductRatingRepository productRatingRepository;
+
+    // Helper method to get average rating
+    private Double getAverageRating(UUID productId) {
+        Double average = productRatingRepository.getAverageRatingByProductId(productId);
+        return average != null ? Math.round(average * 10) / 10.0 : 0.0;
+    }
+
+    private Map<String, Object> mapProductToResponse(Product product) {
+        Map<String, Object> productMap = new LinkedHashMap<>();
+        productMap.put("id", product.getId());
+        productMap.put("name", product.getName());
+        productMap.put("productTypeId", product.getProductType().getId());
+        productMap.put("productCategoryId", product.getProductCategory().getId());
+        productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
+        productMap.put("price", product.getPrice());
+        productMap.put("salePrice", product.getSalePrice());
+        productMap.put("quantity", product.getQuantity());
+        productMap.put("description", product.getDescription());
+        productMap.put("about", product.getAbout());
+        productMap.put("rating", getAverageRating(product.getId()));
+
+        if (product.getPhoto() != null) {
+            Map<String, Object> photoMap = new LinkedHashMap<>();
+            photoMap.put("name", product.getPhoto().getName());
+            photoMap.put("prefix", product.getPhoto().getPrefix());
+            productMap.put("photo", photoMap);
+        }
+
+        return productMap;
+    }
 
     @GetMapping
     public ResponseEntity<?> getAllProducts() {
-        return ResponseEntity.ok(productRepository.findAll());
+        List<Map<String, Object>> result = productRepository.findAll().stream()
+                .map(this::mapProductToResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getFromId(@PathVariable UUID id) {
         return productRepository
                 .findById(id)
-                .map(ResponseEntity::ok)
+                .map(product -> ResponseEntity.ok(mapProductToResponse(product)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -51,28 +85,7 @@ public class ProductController {
                     List<Map<String, Object>> products = productRepository
                             .findTop5ByProductTypeOrderByIdDesc(type)
                             .stream()
-                            .map(product -> {
-                                Map<String, Object> productMap = new LinkedHashMap<>();
-                                productMap.put("id",product.getId());
-                                productMap.put("name", product.getName());
-                                productMap.put("productTypeId", product.getProductType().getId());
-                                productMap.put("productCategoryId", product.getProductCategory().getId());
-                                productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
-                                productMap.put("price", product.getPrice());
-                                productMap.put("salePrice", product.getSalePrice());
-                                productMap.put("quantity", product.getQuantity());
-                                productMap.put("description", product.getDescription());
-                                productMap.put("about", product.getAbout());
-
-                                if (product.getPhoto() != null) {
-                                    Map<String, Object> photoMap = new LinkedHashMap<>();
-                                    photoMap.put("name", product.getPhoto().getName());
-                                    photoMap.put("prefix", product.getPhoto().getPrefix());
-                                    productMap.put("photo", photoMap);
-                                }
-
-                                return productMap;
-                            })
+                            .map(this::mapProductToResponse)
                             .collect(Collectors.toList());
 
                     typeMap.put("products", products);
@@ -88,30 +101,8 @@ public class ProductController {
         if (typeId.equalsIgnoreCase("all")) {
             List<Map<String, Object>> allProducts = productRepository.findAll()
                     .stream()
-                    .map(product -> {
-                        Map<String, Object> productMap = new LinkedHashMap<>();
-                        productMap.put("id", product.getId());
-                        productMap.put("name", product.getName());
-                        productMap.put("productTypeId", product.getProductType().getId());
-                        productMap.put("productCategoryId", product.getProductCategory().getId());
-                        productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
-                        productMap.put("price", product.getPrice());
-                        productMap.put("salePrice", product.getSalePrice());
-                        productMap.put("quantity", product.getQuantity());
-                        productMap.put("description", product.getDescription());
-                        productMap.put("about", product.getAbout());
-
-                        if (product.getPhoto() != null) {
-                            Map<String, Object> photoMap = new LinkedHashMap<>();
-                            photoMap.put("name", product.getPhoto().getName());
-                            photoMap.put("prefix", product.getPhoto().getPrefix());
-                            productMap.put("photo", photoMap);
-                        }
-
-                        return productMap;
-                    })
+                    .map(this::mapProductToResponse)
                     .collect(Collectors.toList());
-
             return ResponseEntity.ok(allProducts);
         }
 
@@ -129,28 +120,7 @@ public class ProductController {
 
         List<Map<String, Object>> products = productRepository.findByProductType(productType)
                 .stream()
-                .map(product -> {
-                    Map<String, Object> productMap = new LinkedHashMap<>();
-                    productMap.put("id", product.getId());
-                    productMap.put("name", product.getName());
-                    productMap.put("productTypeId", product.getProductType().getId());
-                    productMap.put("productCategoryId", product.getProductCategory().getId());
-                    productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
-                    productMap.put("price", product.getPrice());
-                    productMap.put("salePrice", product.getSalePrice());
-                    productMap.put("quantity", product.getQuantity());
-                    productMap.put("description", product.getDescription());
-                    productMap.put("about", product.getAbout());
-
-                    if (product.getPhoto() != null) {
-                        Map<String, Object> photoMap = new LinkedHashMap<>();
-                        photoMap.put("name", product.getPhoto().getName());
-                        photoMap.put("prefix", product.getPhoto().getPrefix());
-                        productMap.put("photo", photoMap);
-                    }
-
-                    return productMap;
-                })
+                .map(this::mapProductToResponse)
                 .collect(Collectors.toList());
 
         response.put("products", products);
@@ -189,28 +159,7 @@ public class ProductController {
         }
 
         List<Map<String, Object>> result = products.stream()
-                .map(product -> {
-                    Map<String, Object> productMap = new LinkedHashMap<>();
-                    productMap.put("id", product.getId());
-                    productMap.put("name", product.getName());
-                    productMap.put("productTypeId", product.getProductType().getId());
-                    productMap.put("productCategoryId", product.getProductCategory().getId());
-                    productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
-                    productMap.put("price", product.getPrice());
-                    productMap.put("salePrice", product.getSalePrice());
-                    productMap.put("quantity", product.getQuantity());
-                    productMap.put("description", product.getDescription());
-                    productMap.put("about", product.getAbout());
-
-                    if (product.getPhoto() != null) {
-                        Map<String, Object> photoMap = new LinkedHashMap<>();
-                        photoMap.put("name", product.getPhoto().getName());
-                        photoMap.put("prefix", product.getPhoto().getPrefix());
-                        productMap.put("photo", photoMap);
-                    }
-
-                    return productMap;
-                })
+                .map(this::mapProductToResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);

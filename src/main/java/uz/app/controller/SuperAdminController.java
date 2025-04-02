@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import uz.app.config.JwtProvider;
 import uz.app.dto.AdminOperatorDTO;
 import uz.app.dto.UserDTO;
 import uz.app.entity.User;

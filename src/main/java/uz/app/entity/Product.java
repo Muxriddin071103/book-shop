@@ -35,6 +35,7 @@ public class Product {
     @OneToOne(cascade = CascadeType.REMOVE)
     private Attachment photo;
 
+    private Double rating;
     private Double price;
     private Double salePrice;
     private Integer quantity;
