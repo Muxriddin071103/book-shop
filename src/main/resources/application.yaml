@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: prod
   mvc:
     static-path-pattern: /**
   web:
@@ -11,5 +9,16 @@ spring:
       enabled: true
       max-file-size: 50MB
       max-request-size: 50MB
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: root123
+  application:
+    name: book-shop
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
 my_token:
-  expire_time: 604800000
+  key: MySuperSecretKeyThatIsAtLeast32CharactersLong
+  expire_time: 3600000
