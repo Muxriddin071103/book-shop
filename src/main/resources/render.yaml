@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: book-shop
+    env: java
+    plan: free
+    runtime: java17
+    buildCommand: "./mvnw clean install"
+    startCommand: "java -jar target/book-shop-0.0.1-SNAPSHOT.jar"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      - key: DATABASE_URL
+        value: jdbc:postgresql://your-db-host:5432/postgres
+      - key: DATABASE_USERNAME
+        value: postgres
+      - key: DATABASE_PASSWORD
+        value: root123
+
+      - key: TOKEN_KEY
+        value: MySuperSecretKeyThatIsAtLeast32CharactersLong
