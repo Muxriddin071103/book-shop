@@ -39,6 +39,10 @@ public class Product {
     private Double price;
     private Double salePrice;
     private Integer quantity;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(columnDefinition = "TEXT")
     private String about;
 }

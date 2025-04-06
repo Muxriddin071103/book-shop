@@ -28,25 +28,31 @@ public class ProductController {
     private final AttachmentRepository attachmentRepository;
     private final ProductRatingRepository productRatingRepository;
 
-    // Helper method to get average rating
-    private Double getAverageRating(UUID productId) {
+    private Double updateAndGetAverageRating(UUID productId) {
         Double average = productRatingRepository.getAverageRatingByProductId(productId);
-        return average != null ? Math.round(average * 10) / 10.0 : 0.0;
+        Double roundedAverage = average != null ? Math.round(average * 10) / 10.0 : 0.0;
+
+        productRepository.findById(productId).ifPresent(product -> {
+            product.setRating(roundedAverage);
+            productRepository.save(product);
+        });
+
+        return roundedAverage;
     }
 
     private Map<String, Object> mapProductToResponse(Product product) {
         Map<String, Object> productMap = new LinkedHashMap<>();
         productMap.put("id", product.getId());
         productMap.put("name", product.getName());
-        productMap.put("productTypeId", product.getProductType().getId());
-        productMap.put("productCategoryId", product.getProductCategory().getId());
-        productMap.put("authorId", product.getAuthor() != null ? product.getAuthor().getId() : null);
+        productMap.put("productType", product.getProductType());
+        productMap.put("productCategory", product.getProductCategory());
+        productMap.put("author", product.getAuthor() != null ? product.getAuthor() : null);
         productMap.put("price", product.getPrice());
         productMap.put("salePrice", product.getSalePrice());
         productMap.put("quantity", product.getQuantity());
         productMap.put("description", product.getDescription());
         productMap.put("about", product.getAbout());
-        productMap.put("rating", getAverageRating(product.getId()));
+        productMap.put("rating", updateAndGetAverageRating(product.getId()));
 
         if (product.getPhoto() != null) {
             Map<String, Object> photoMap = new LinkedHashMap<>();
@@ -214,8 +220,7 @@ public class ProductController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> update(
             @PathVariable UUID id,
-            @RequestPart ProductDTO productDTO,
-            @RequestPart(required = false) MultipartFile photo) throws IOException {
+            @RequestBody ProductDTO productDTO) {
 
         Optional<Product> existingProduct = productRepository.findById(id);
         Optional<ProductType> productType = productTypeRepository.findById(productDTO.getProductTypeId());
@@ -240,15 +245,6 @@ public class ProductController {
         updatedProduct.setDescription(productDTO.getDescription());
         updatedProduct.setAbout(productDTO.getAbout());
         author.ifPresent(updatedProduct::setAuthor);
-
-        if (photo != null && !photo.isEmpty()) {
-            if (updatedProduct.getPhoto() != null) {
-                attachmentRepository.delete(updatedProduct.getPhoto());
-            }
-
-            Attachment attachment = Attachment.createAttachment(photo, "/products");
-            updatedProduct.setPhoto(attachment);
-        }
 
         return ResponseEntity.ok(productRepository.save(updatedProduct));
     }

@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uz.app.config.LocalDateTimeAttributeConverter;
 import uz.app.entity.enums.OrderStatus;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,9 @@ public class Order {
     private List<OrderedProduct> orderedProducts;
 
     private Double totalPrice;
+
+    @Convert(converter = LocalDateTimeAttributeConverter.class)
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;

@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import uz.app.dto.*;
+import uz.app.dto.OrderDTO;
+import uz.app.dto.OrderProductDTO;
+import uz.app.dto.OrderResponseDTO;
 import uz.app.entity.Order;
 import uz.app.entity.OrderedProduct;
 import uz.app.entity.Product;
@@ -16,6 +18,7 @@ import uz.app.repository.OrderRepository;
 import uz.app.repository.OrderedProductRepository;
 import uz.app.repository.ProductRepository;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,6 +65,7 @@ public class OrderController {
         newOrder.setCustomerPhoneNumber(orderDTO.getCustomerPhoneNumber());
         newOrder.setStatus(OrderStatus.IN_PROGRESS);
         newOrder.setTotalPrice(0.0);
+        newOrder.setCreatedAt(LocalDateTime.now());
 
         newOrder = orderRepository.save(newOrder);
 
@@ -189,6 +193,17 @@ public class OrderController {
         return ResponseEntity.ok(convertToOrderResponseDTO(order));
     }
 
+    @GetMapping("/status/{status}")
+    public ResponseEntity<?> getOrdersByStatus(@PathVariable OrderStatus status) {
+        List<OrderResponseDTO> orderDTOs = orderRepository
+                .findByStatus(status)
+                .stream()
+                .map(this::convertToOrderResponseDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(orderDTOs);
+    }
+
     @DeleteMapping("/{orderId}")
     public ResponseEntity<?> deleteOrder(@PathVariable UUID orderId) {
         Optional<Order> orderOptional = orderRepository.findById(orderId);
@@ -263,6 +278,7 @@ public class OrderController {
                 .customerPhoneNumber(order.getCustomerPhoneNumber())
                 .products(productDTOs)
                 .totalPrice(order.getTotalPrice())
+                .createdAt(order.getCreatedAt())
                 .status(order.getStatus())
                 .build();
     }

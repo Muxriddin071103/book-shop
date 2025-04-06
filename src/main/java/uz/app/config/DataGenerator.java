@@ -26,7 +26,7 @@ public class DataGenerator {
                         existingAdmin.setFirstName("Super");
                         existingAdmin.setLastName("Admin");
                         existingAdmin.setBirthYear(2000);
-                        existingAdmin.setPassword(passwordEncoder.encode("super111"));
+                        existingAdmin.setPassword(passwordEncoder.encode("111"));
                         existingAdmin.setRole(Role.SUPER_ADMIN);
                         existingAdmin.setCreatedAt(LocalDateTime.now());
                         existingAdmin.setEnabled(true);
@@ -40,7 +40,7 @@ public class DataGenerator {
                                 .lastName("Admin")
                                 .phoneNumber("111")
                                 .birthYear(2000)
-                                .password(passwordEncoder.encode("super111"))
+                                .password(passwordEncoder.encode("111"))
                                 .role(Role.SUPER_ADMIN)
                                 .createdAt(LocalDateTime.now())
                                 .enabled(true)

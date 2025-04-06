@@ -9,7 +9,6 @@ import uz.app.dto.NameDTO;
 import uz.app.entity.ProductType;
 import uz.app.repository.ProductTypeRepository;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController

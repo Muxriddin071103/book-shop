@@ -40,6 +40,7 @@ public class User implements UserDetails {
 
     @Convert(converter = LocalDateTimeAttributeConverter.class)
     private LocalDateTime createdAt;
+
     private boolean enabled;
 
     @Override

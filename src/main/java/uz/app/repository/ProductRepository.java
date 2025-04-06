@@ -8,7 +8,6 @@ import uz.app.entity.Product;
 import uz.app.entity.ProductType;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -18,15 +17,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByProductType(ProductType productType);
 
     @Query(value = "SELECT * FROM products p WHERE " +
-            "LOWER(p.name) LIKE LOWER(:query) OR " +
-            "LOWER(p.description) LIKE LOWER(:query)",
-            nativeQuery = true)
+            "LOWER(p.name) LIKE LOWER(:query)", nativeQuery = true)
     List<Product> searchAllProducts(@Param("query") String query);
 
     @Query(value = "SELECT * FROM products p WHERE " +
             "p.product_type_id = :typeId AND " +
-            "(LOWER(p.name) LIKE LOWER(:query) OR " +
-            "LOWER(p.description) LIKE LOWER(:query))",
-            nativeQuery = true)
+            "LOWER(p.name) LIKE LOWER(:query)", nativeQuery = true)
     List<Product> searchByProductType(@Param("typeId") UUID typeId, @Param("query") String query);
 }

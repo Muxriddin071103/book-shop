@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import uz.app.entity.enums.OrderStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ public class OrderResponseDTO {
     private String customerPhoneNumber;
     private List<OrderProductResponseDTO> products;
     private double totalPrice;
+    private LocalDateTime createdAt;
     private OrderStatus status;
 
     @Data
