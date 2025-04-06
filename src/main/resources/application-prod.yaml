@@ -3,11 +3,15 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
+  application:
+    name: book-shop
   jpa:
-    show-sql: false
+    show-sql: true
     hibernate:
       ddl-auto: update
+  profiles:
+    active: prod
 
 my_token:
   key: ${TOKEN_KEY}
-  expire_time: ${TOKEN_EXPIRE:604800000}
+  expire_time: 604800000
