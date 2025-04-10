@@ -12,7 +12,7 @@ import uz.app.repository.ProductTypeRepository;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/product-type")
+@RequestMapping("api/product-type")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
 @Tag(name = "Product Type Management", description = "Only Admin & Super Admin can manage")

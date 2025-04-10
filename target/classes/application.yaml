@@ -21,4 +21,4 @@ spring:
       ddl-auto: update
 my_token:
   key: MySuperSecretKeyThatIsAtLeast32CharactersLong
-  expire_time: 3600000
+  expire_time: 604800000
